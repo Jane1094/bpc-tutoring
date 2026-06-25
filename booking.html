@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book a Session | Jane – BPC Tutor</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;500;600&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --ink: #1a1a1a; --mid: #555; --rule: #d6d0c8; --cream: #faf9f6; --accent: #1c3d5a; --accent-light: #e8eef3; --gold: #b08d57; --success: #2d6a4f; --error: #c0392b; }
+  body { font-family: 'Inter', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
+  header { background: var(--accent); color: white; padding: 48px 24px 40px; text-align: center; }
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+  header h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2rem, 5vw, 3rem); font-weight: 600; line-height: 1.15; margin-bottom: 12px; }
+  header p { font-size: 15px; color: rgba(255,255,255,0.75); max-width: 480px; margin: 0 auto; line-height: 1.6; }
+  .creds { background: var(--gold); padding: 10px 24px; text-align: center; font-size: 12px; font-weight: 600; letter-spacing: 0.05em; color: white; display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+  .cred-item::before { content: '· '; opacity: 0.6; } .cred-item:first-child::before { content: ''; }
+  main { max-width: 780px; margin: 0 auto; padding: 40px 24px 80px; }
+  .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; margin-bottom: 40px; }
+  .info-card { background: white; padding: 20px 24px; display: flex; flex-direction: column; gap: 4px; }
+  .info-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
+  .info-value { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; color: var(--accent); }
+  .info-sub { font-size: 12px; color: var(--mid); }
+  .form-section { background: white; border: 1px solid var(--rule); border-radius: 8px; padding: 32px; }
+  .form-section h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; color: var(--accent); margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--rule); }
+  .field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .field-group.full { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--ink); }
+  input, select, textarea { font-family: 'Inter', sans-serif; font-size: 14px; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 4px; background: var(--cream); color: var(--ink); width: 100%; transition: border-color 0.15s; outline: none; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); background: white; }
+  textarea { resize: vertical; min-height: 90px; }
+  .divider { border: none; border-top: 1px solid var(--rule); margin: 24px 0; }
+  /* Calendar */
+  .calendar-section { margin-bottom: 24px; }
+  .calendar-section > label { display: block; margin-bottom: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
+  .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .cal-nav button { background: none; border: 1px solid var(--rule); border-radius: 4px; padding: 4px 14px; cursor: pointer; font-size: 16px; color: var(--accent); }
+  .cal-nav button:hover { background: var(--accent-light); }
+  .cal-month { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-weight: 600; color: var(--accent); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-header { text-align: center; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--mid); padding: 4px 0 8px; }
+  .cal-day { text-align: center; padding: 9px 2px; border-radius: 4px; font-size: 13px; border: 1px solid transparent; transition: all 0.12s; }
+  .cal-day.available { background: white; border-color: var(--rule); color: var(--ink); cursor: pointer; }
+  .cal-day.available:hover { border-color: var(--accent); color: var(--accent); }
+  .cal-day.selected { background: var(--accent); color: white; border-color: var(--accent); font-weight: 600; }
+  .cal-day.today { font-weight: 700; }
+  .cal-day.available.today { border-color: var(--gold); }
+  .cal-day.unavailable { color: #ccc; cursor: default; }
+  .cal-day.empty { border: none; }
+  /* Time */
+  .slot-section { margin-bottom: 20px; }
+  .slot-section > label { display: block; margin-bottom: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
+  .slot-group-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; margin-top: 12px; }
+  .slot-group-label:first-of-type { margin-top: 0; }
+  .time-slots { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
+  .time-slot { padding: 8px 16px; border: 1px solid var(--rule); border-radius: 4px; background: white; font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--ink); }
+  .time-slot.selected { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .time-slot:hover:not(.selected) { border-color: var(--accent); }
+  .selected-slot-label { font-size: 13px; color: var(--accent); font-weight: 600; margin-top: 12px; min-height: 20px; }
+  /* Submit */
+  .submit-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; transition: opacity 0.15s; margin-top: 8px; }
+  .submit-btn:hover { opacity: 0.88; }
+  .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .notice { font-size: 12px; color: var(--mid); text-align: center; margin-top: 12px; line-height: 1.5; }
+  .toast { display: none; padding: 16px 20px; border-radius: 6px; font-size: 14px; margin-top: 16px; font-weight: 500; }
+  .toast.success { background: #e8f5ee; color: var(--success); border: 1px solid #a8d5ba; display: block; }
+  .toast.error { background: #fdecea; color: var(--error); border: 1px solid #f5bcb4; display: block; }
+  .profile-link { text-align: center; margin-top: 32px; font-size: 13px; color: var(--mid); }
+  .profile-link a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .profile-link a:hover { text-decoration: underline; }
+  @media (max-width: 520px) { .field-group { grid-template-columns: 1fr; } .form-section { padding: 24px 20px; } .cal-day { font-size: 12px; padding: 7px 2px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">BPC Tutoring · Bar Training</p>
+  <h1>Book an Initial Call</h1>
+  <p>Civil litigation, criminal law, and BPC resit preparation — taught by a called barrister.</p>
+</header>
+
+<div class="creds">
+  <span class="cred-item">Called Barrister, Middle Temple 2026</span>
+  <span class="cred-item">Harmsworth Scholar</span>
+  <span class="cred-item">BPC LLM with Distinction</span>
+</div>
+
+<main>
+  <div class="info-grid">
+    <div class="info-card">
+      <span class="info-label">Rate</span>
+      <span class="info-value">£45/hr</span>
+      <span class="info-sub">Sessions typically 1–2 hours</span>
+    </div>
+    <div class="info-card">
+      <span class="info-label">Evenings</span>
+      <span class="info-value">6pm–9pm</span>
+      <span class="info-sub">Mon–Fri</span>
+    </div>
+    <div class="info-card">
+      <span class="info-label">Daytime</span>
+      <span class="info-value">12pm–2pm</span>
+      <span class="info-sub">Mon–Fri</span>
+    </div>
+    <div class="info-card">
+      <span class="info-label">Format</span>
+      <span class="info-value">Online</span>
+      <span class="info-sub">London in-person on request</span>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <h2>Request a call</h2>
+
+    <div class="field-group">
+      <div class="field"><label for="fname">First name</label><input type="text" id="fname" placeholder="Ana"></div>
+      <div class="field"><label for="lname">Last name</label><input type="text" id="lname" placeholder="Smith"></div>
+    </div>
+    <div class="field-group">
+      <div class="field"><label for="email">Email</label><input type="email" id="email" placeholder="ana@example.com"></div>
+      <div class="field">
+        <label for="stage">BPC stage</label>
+        <select id="stage">
+          <option value="">Select…</option>
+          <option>BPTC / BPC Year 1</option>
+          <option>BPTC / BPC Year 2</option>
+          <option>Resit student</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group full">
+      <div class="field">
+        <label for="subjects">Subject(s) you need help with</label>
+        <select id="subjects">
+          <option value="">Select…</option>
+          <option>Civil Litigation</option>
+          <option>Criminal Litigation</option>
+          <option>Both Civil &amp; Criminal</option>
+          <option>Other BPC subject</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group full">
+      <div class="field">
+        <label for="notes">Anything else I should know</label>
+        <textarea id="notes" placeholder="e.g. resit dates, specific topics, how you'd like to work…"></textarea>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="calendar-section">
+      <label>Select a date (Mon–Fri, next 4 weeks)</label>
+      <div class="cal-nav">
+        <button onclick="prevMonth()">&#8249;</button>
+        <span class="cal-month" id="calMonthLabel"></span>
+        <button onclick="nextMonth()">&#8250;</button>
+      </div>
+      <div class="cal-grid" id="calGrid">
+        <div class="cal-header">Mo</div><div class="cal-header">Tu</div><div class="cal-header">We</div>
+        <div class="cal-header">Th</div><div class="cal-header">Fr</div><div class="cal-header">Sa</div><div class="cal-header">Su</div>
+      </div>
+    </div>
+
+    <div class="slot-section">
+      <label>Preferred time</label>
+      <div class="slot-group-label">Daytime</div>
+      <div class="time-slots">
+        <button class="time-slot" onclick="selectTime(this,'12:00')">12:00</button>
+        <button class="time-slot" onclick="selectTime(this,'13:00')">13:00</button>
+      </div>
+      <div class="slot-group-label">Evening</div>
+      <div class="time-slots">
+        <button class="time-slot" onclick="selectTime(this,'18:00')">18:00</button>
+        <button class="time-slot" onclick="selectTime(this,'18:30')">18:30</button>
+        <button class="time-slot" onclick="selectTime(this,'19:00')">19:00</button>
+        <button class="time-slot" onclick="selectTime(this,'19:30')">19:30</button>
+        <button class="time-slot" onclick="selectTime(this,'20:00')">20:00</button>
+        <button class="time-slot" onclick="selectTime(this,'20:30')">20:30</button>
+      </div>
+      <div class="selected-slot-label" id="slotLabel"></div>
+    </div>
+
+    <button class="submit-btn" onclick="submitForm()">Request this slot</button>
+    <div id="toast" class="toast"></div>
+    <p class="notice">I'll confirm within 24 hours. This is a request, not an instant booking.</p>
+  </div>
+
+  <p class="profile-link">
+    View my full profile on <a href="https://www.superprof.co.uk/called-barrister-with-bpc-llm-distinction-and-harmsworth-scholarship-teaches-civil-litigation-criminal-law-and-bpc-london-online.html" target="_blank">Superprof</a>
+  </p>
+</main>
+
+<script>
+  const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+  const LIMIT = new Date(TODAY); LIMIT.setDate(LIMIT.getDate() + 28);
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  let viewYear = TODAY.getFullYear(), viewMonth = TODAY.getMonth();
+  let selectedDate = null, selectedTime = '';
+
+  function renderCalendar() {
+    document.getElementById('calMonthLabel').textContent = MONTHS[viewMonth] + ' ' + viewYear;
+    const grid = document.getElementById('calGrid');
+    while (grid.children.length > 7) grid.removeChild(grid.lastChild);
+    const first = new Date(viewYear, viewMonth, 1);
+    let offset = (first.getDay() + 6) % 7;
+    for (let i = 0; i < offset; i++) { const b = document.createElement('div'); b.className = 'cal-day empty'; grid.appendChild(b); }
+    const days = new Date(viewYear, viewMonth + 1, 0).getDate();
+    for (let d = 1; d <= days; d++) {
+      const date = new Date(viewYear, viewMonth, d);
+      const dow = date.getDay();
+      const isWeekend = dow === 0 || dow === 6;
+      const isPast = date < TODAY;
+      const isBeyond = date > LIMIT;
+      const isToday = date.getTime() === TODAY.getTime();
+      const isSel = selectedDate && date.getTime() === selectedDate.getTime();
+      const el = document.createElement('div');
+      el.textContent = d;
+      if (isWeekend || isPast || isBeyond) {
+        el.className = 'cal-day unavailable';
+      } else {
+        el.className = 'cal-day available' + (isToday ? ' today' : '') + (isSel ? ' selected' : '');
+        el.onclick = () => pickDate(date);
+      }
+      grid.appendChild(el);
+    }
+  }
+
+  function pickDate(date) {
+    selectedDate = date;
+    renderCalendar();
+    updateLabel();
+  }
+
+  function prevMonth() { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar(); }
+  function nextMonth() { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendar(); }
+
+  function selectTime(el, time) {
+    document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedTime = time;
+    updateLabel();
+  }
+
+  function updateLabel() {
+    const label = document.getElementById('slotLabel');
+    const opts = { weekday: 'long', day: 'numeric', month: 'long' };
+    if (selectedDate && selectedTime) label.textContent = '✓ ' + selectedDate.toLocaleDateString('en-GB', opts) + ' at ' + selectedTime;
+    else if (selectedDate) label.textContent = selectedDate.toLocaleDateString('en-GB', opts) + ' — now pick a time';
+    else label.textContent = '';
+  }
+
+  async function submitForm() {
+    const fname = document.getElementById('fname').value.trim();
+    const lname = document.getElementById('lname').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const stage = document.getElementById('stage').value;
+    const subjects = document.getElementById('subjects').value;
+    const notes = document.getElementById('notes').value.trim();
+    const toast = document.getElementById('toast');
+    toast.className = 'toast'; toast.textContent = '';
+
+    if (!fname || !email || !stage || !subjects || !selectedDate || !selectedTime) {
+      toast.textContent = 'Please fill in all fields and select a date and time.';
+      toast.className = 'toast error'; return;
+    }
+    if (!email.includes('@')) { toast.textContent = 'Please enter a valid email address.'; toast.className = 'toast error'; return; }
+
+    const btn = document.querySelector('.submit-btn');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    const dateStr = selectedDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+    try {
+      const res = await fetch('https://formspree.io/f/xojoeroj', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: fname + ' ' + lname, email,
+          bpc_stage: stage, subjects,
+          preferred_date: dateStr, preferred_time: selectedTime,
+          notes: notes || 'None provided',
+          _subject: 'New tutoring enquiry – ' + fname + ' – ' + dateStr + ' at ' + selectedTime
+        })
+      });
+      if (res.ok) {
+        toast.textContent = 'Thanks, ' + fname + '. Your request for ' + dateStr + ' at ' + selectedTime + ' has been sent. I\'ll be in touch within 24 hours to confirm.';
+        toast.className = 'toast success'; btn.textContent = 'Request sent';
+      } else { throw new Error(); }
+    } catch (e) {
+      toast.textContent = 'Something went wrong. Please email twumjane94@gmail.com directly.';
+      toast.className = 'toast error'; btn.disabled = false; btn.textContent = 'Request this slot';
+    }
+  }
+
+  renderCalendar();
+</script>
+</body>
+</html>
