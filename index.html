@@ -186,19 +186,27 @@
   let bookedSlots = []; // [{date:'2026-07-02', time:'18:00'}, …]
 
   // Load booked slots from Apps Script
-  async function loadBookedSlots() {
-    try {
-      const res = await fetch(APPS_SCRIPT_URL + '?action=slots');
-      // Apps Script returns JSON with CORS headers when deployed as web app
-      if (res.ok) {
-        bookedSlots = await res.json();
-      }
-    } catch (e) {
-      // Silently fail — calendar still works without live availability
-    } finally {
+  function loadBookedSlots() {
+    // Use JSONP to bypass CORS when reading from Apps Script
+    window.handleSlots = function(data) {
+      bookedSlots = data;
       document.getElementById('calLoading').style.display = 'none';
       renderCalendar();
-    }
+    };
+
+    // Set a timeout in case the script never loads
+    setTimeout(() => {
+      document.getElementById('calLoading').style.display = 'none';
+      renderCalendar();
+    }, 5000);
+
+    const script = document.createElement('script');
+    script.src = APPS_SCRIPT_URL + '?action=slots';
+    script.onerror = () => {
+      document.getElementById('calLoading').style.display = 'none';
+      renderCalendar();
+    };
+    document.body.appendChild(script);
   }
 
   function isDateBooked(date) {
