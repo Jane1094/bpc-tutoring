@@ -71,6 +71,7 @@
   .loading-slots { font-size: 12px; color: var(--mid); font-style: italic; margin-bottom: 8px; }
   @media (max-width: 520px) { .field-group { grid-template-columns: 1fr; } .form-section { padding: 24px 20px; } .cal-day { font-size: 12px; padding: 7px 2px; } }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -292,7 +293,7 @@
     else label.textContent = '';
   }
 
-  async function submitForm() {
+  function submitForm() {
     const fname = document.getElementById('fname').value.trim();
     const lname = document.getElementById('lname').value.trim();
     const email = document.getElementById('email').value.trim();
@@ -312,55 +313,40 @@
     btn.disabled = true; btn.textContent = 'Sending…';
     const dateStr = selectedDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    // Build a hidden form and submit it to Apps Script in a hidden iframe
-    // This bypasses CORS entirely — the most reliable method for Google Apps Script
-    const iframeId = 'submitFrame';
-    let iframe = document.getElementById(iframeId);
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.id = iframeId;
-      iframe.name = iframeId;
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-    }
+    // Build the confirm URL for the notification email
+    const confirmUrl = APPS_SCRIPT_URL +
+      '?action=confirm' +
+      '&name=' + encodeURIComponent(fname + ' ' + lname) +
+      '&email=' + encodeURIComponent(email) +
+      '&date=' + encodeURIComponent(dateStr) +
+      '&time=' + encodeURIComponent(selectedTime) +
+      '&stage=' + encodeURIComponent(stage) +
+      '&subjects=' + encodeURIComponent(subjects) +
+      '&notes=' + encodeURIComponent(notes || 'None provided');
 
-    const hiddenForm = document.createElement('form');
-    hiddenForm.method = 'GET';
-    hiddenForm.action = APPS_SCRIPT_URL;
-    hiddenForm.target = iframeId;
-
-    const fields = {
-      action: 'book',
+    emailjs.send('service_eywa8ke', 'template_e8zdxax', {
       name: fname + ' ' + lname,
       email: email,
       bpc_stage: stage,
       subjects: subjects,
       preferred_date: dateStr,
       preferred_time: selectedTime,
-      notes: notes || 'None provided'
-    };
-
-    for (const [key, value] of Object.entries(fields)) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = value;
-      hiddenForm.appendChild(input);
-    }
-
-    document.body.appendChild(hiddenForm);
-    hiddenForm.submit();
-    document.body.removeChild(hiddenForm);
-
-    // Show success after short delay
-    setTimeout(() => {
+      notes: notes || 'None provided',
+      confirm_url: confirmUrl
+    }).then(() => {
       toast.textContent = 'Thanks, ' + fname + '. Your request for ' + dateStr + ' at ' + selectedTime + ' has been sent. I\'ll be in touch within 24 hours to confirm.';
       toast.className = 'toast success';
       btn.textContent = 'Request sent';
-    }, 1500);
+    }).catch(() => {
+      toast.textContent = 'Something went wrong. Please email twumjane94@gmail.com directly.';
+      toast.className = 'toast error';
+      btn.disabled = false;
+      btn.textContent = 'Request this slot';
+    });
   }
 
   // Init
+  emailjs.init('WefbeCgVPtny0XBdf');
   loadBookedSlots();
 </script>
 </body>
