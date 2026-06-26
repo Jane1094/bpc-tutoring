@@ -174,7 +174,7 @@
 
 <script>
   // ── Replace this with your Google Apps Script Web App URL after deployment ──
-  const APPS_SCRIPT_URL = 'YOUR_APPS_SCRIPT_URL';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQ7OZWhNF6Y9RumGFFnnSUpaUHfhWWr938nwLhrAiRQC_VLzs4dgtBdrZll_balDhz/exec';
 
   const TODAY = new Date(); TODAY.setHours(0,0,0,0);
   const LIMIT = new Date(TODAY); LIMIT.setDate(LIMIT.getDate() + 28);
@@ -312,29 +312,52 @@
     btn.disabled = true; btn.textContent = 'Sending…';
     const dateStr = selectedDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    try {
-      // Use no-cors iframe trick to avoid CORS issues with Google Apps Script
-      const params = new URLSearchParams({
-        action: 'book',
-        name: fname + ' ' + lname,
-        email, bpc_stage: stage, subjects,
-        preferred_date: dateStr, preferred_time: selectedTime,
-        notes: notes || 'None provided'
-      });
-
-      // Send via no-cors fetch (fire and forget — CORS prevents reading response)
-      fetch(APPS_SCRIPT_URL + '?' + params.toString(), { mode: 'no-cors' });
-
-      // Show success after a short delay (we can't read the response due to CORS, but the request goes through)
-      setTimeout(() => {
-        toast.textContent = 'Thanks, ' + fname + '. Your request for ' + dateStr + ' at ' + selectedTime + ' has been sent. I\'ll be in touch within 24 hours to confirm.';
-        toast.className = 'toast success'; btn.textContent = 'Request sent';
-      }, 1200);
-
-    } catch (e) {
-      toast.textContent = 'Something went wrong. Please email twumjane94@gmail.com directly.';
-      toast.className = 'toast error'; btn.disabled = false; btn.textContent = 'Request this slot';
+    // Build a hidden form and submit it to Apps Script in a hidden iframe
+    // This bypasses CORS entirely — the most reliable method for Google Apps Script
+    const iframeId = 'submitFrame';
+    let iframe = document.getElementById(iframeId);
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = iframeId;
+      iframe.name = iframeId;
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
     }
+
+    const hiddenForm = document.createElement('form');
+    hiddenForm.method = 'GET';
+    hiddenForm.action = APPS_SCRIPT_URL;
+    hiddenForm.target = iframeId;
+
+    const fields = {
+      action: 'book',
+      name: fname + ' ' + lname,
+      email: email,
+      bpc_stage: stage,
+      subjects: subjects,
+      preferred_date: dateStr,
+      preferred_time: selectedTime,
+      notes: notes || 'None provided'
+    };
+
+    for (const [key, value] of Object.entries(fields)) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = value;
+      hiddenForm.appendChild(input);
+    }
+
+    document.body.appendChild(hiddenForm);
+    hiddenForm.submit();
+    document.body.removeChild(hiddenForm);
+
+    // Show success after short delay
+    setTimeout(() => {
+      toast.textContent = 'Thanks, ' + fname + '. Your request for ' + dateStr + ' at ' + selectedTime + ' has been sent. I\'ll be in touch within 24 hours to confirm.';
+      toast.className = 'toast success';
+      btn.textContent = 'Request sent';
+    }, 1500);
   }
 
   // Init
