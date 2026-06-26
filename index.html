@@ -31,7 +31,6 @@
   input:focus, select:focus, textarea:focus { border-color: var(--accent); background: white; }
   textarea { resize: vertical; min-height: 90px; }
   .divider { border: none; border-top: 1px solid var(--rule); margin: 24px 0; }
-  /* Calendar */
   .calendar-section { margin-bottom: 24px; }
   .calendar-section > label { display: block; margin-bottom: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
   .cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -47,8 +46,8 @@
   .cal-day.today { font-weight: 700; }
   .cal-day.available.today { border-color: var(--gold); }
   .cal-day.unavailable { color: #ccc; cursor: default; }
+  .cal-day.booked { background: #f5f5f5; color: #bbb; cursor: not-allowed; border-color: #eee; text-decoration: line-through; }
   .cal-day.empty { border: none; }
-  /* Time */
   .slot-section { margin-bottom: 20px; }
   .slot-section > label { display: block; margin-bottom: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
   .slot-group-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-bottom: 6px; margin-top: 12px; }
@@ -56,9 +55,9 @@
   .time-slots { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; }
   .time-slot { padding: 8px 16px; border: 1px solid var(--rule); border-radius: 4px; background: white; font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--ink); }
   .time-slot.selected { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
-  .time-slot:hover:not(.selected) { border-color: var(--accent); }
+  .time-slot:hover:not(.selected):not(.booked) { border-color: var(--accent); }
+  .time-slot.booked { background: #f5f5f5; color: #bbb; cursor: not-allowed; border-color: #eee; text-decoration: line-through; }
   .selected-slot-label { font-size: 13px; color: var(--accent); font-weight: 600; margin-top: 12px; min-height: 20px; }
-  /* Submit */
   .submit-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; cursor: pointer; transition: opacity 0.15s; margin-top: 8px; }
   .submit-btn:hover { opacity: 0.88; }
   .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -69,6 +68,7 @@
   .profile-link { text-align: center; margin-top: 32px; font-size: 13px; color: var(--mid); }
   .profile-link a { color: var(--accent); text-decoration: none; font-weight: 600; }
   .profile-link a:hover { text-decoration: underline; }
+  .loading-slots { font-size: 12px; color: var(--mid); font-style: italic; margin-bottom: 8px; }
   @media (max-width: 520px) { .field-group { grid-template-columns: 1fr; } .form-section { padding: 24px 20px; } .cal-day { font-size: 12px; padding: 7px 2px; } }
 </style>
 </head>
@@ -88,31 +88,14 @@
 
 <main>
   <div class="info-grid">
-    <div class="info-card">
-      <span class="info-label">Rate</span>
-      <span class="info-value">£45/hr</span>
-      <span class="info-sub">Sessions typically 1–2 hours</span>
-    </div>
-    <div class="info-card">
-      <span class="info-label">Evenings</span>
-      <span class="info-value">6pm–9pm</span>
-      <span class="info-sub">Mon–Fri</span>
-    </div>
-    <div class="info-card">
-      <span class="info-label">Daytime</span>
-      <span class="info-value">12pm–2pm</span>
-      <span class="info-sub">Mon–Fri</span>
-    </div>
-    <div class="info-card">
-      <span class="info-label">Format</span>
-      <span class="info-value">Online</span>
-      <span class="info-sub">London in-person on request</span>
-    </div>
+    <div class="info-card"><span class="info-label">Rate</span><span class="info-value">£45/hr</span><span class="info-sub">Sessions typically 1–2 hours</span></div>
+    <div class="info-card"><span class="info-label">Evenings</span><span class="info-value">6pm–9pm</span><span class="info-sub">Mon–Fri</span></div>
+    <div class="info-card"><span class="info-label">Daytime</span><span class="info-value">12pm–2pm</span><span class="info-sub">Mon–Fri</span></div>
+    <div class="info-card"><span class="info-label">Format</span><span class="info-value">Online</span><span class="info-sub">London in-person on request</span></div>
   </div>
 
   <div class="form-section">
     <h2>Request a call</h2>
-
     <div class="field-group">
       <div class="field"><label for="fname">First name</label><input type="text" id="fname" placeholder="Ana"></div>
       <div class="field"><label for="lname">Last name</label><input type="text" id="lname" placeholder="Smith"></div>
@@ -143,16 +126,14 @@
       </div>
     </div>
     <div class="field-group full">
-      <div class="field">
-        <label for="notes">Anything else I should know</label>
-        <textarea id="notes" placeholder="e.g. resit dates, specific topics, how you'd like to work…"></textarea>
-      </div>
+      <div class="field"><label for="notes">Anything else I should know</label><textarea id="notes" placeholder="e.g. resit dates, specific topics, how you'd like to work…"></textarea></div>
     </div>
 
     <hr class="divider">
 
     <div class="calendar-section">
       <label>Select a date (Mon–Fri, next 4 weeks)</label>
+      <div class="loading-slots" id="calLoading">Checking availability…</div>
       <div class="cal-nav">
         <button onclick="prevMonth()">&#8249;</button>
         <span class="cal-month" id="calMonthLabel"></span>
@@ -168,17 +149,17 @@
       <label>Preferred time</label>
       <div class="slot-group-label">Daytime</div>
       <div class="time-slots">
-        <button class="time-slot" onclick="selectTime(this,'12:00')">12:00</button>
-        <button class="time-slot" onclick="selectTime(this,'13:00')">13:00</button>
+        <button class="time-slot" id="slot-12:00" onclick="selectTime(this,'12:00')">12:00</button>
+        <button class="time-slot" id="slot-13:00" onclick="selectTime(this,'13:00')">13:00</button>
       </div>
       <div class="slot-group-label">Evening</div>
       <div class="time-slots">
-        <button class="time-slot" onclick="selectTime(this,'18:00')">18:00</button>
-        <button class="time-slot" onclick="selectTime(this,'18:30')">18:30</button>
-        <button class="time-slot" onclick="selectTime(this,'19:00')">19:00</button>
-        <button class="time-slot" onclick="selectTime(this,'19:30')">19:30</button>
-        <button class="time-slot" onclick="selectTime(this,'20:00')">20:00</button>
-        <button class="time-slot" onclick="selectTime(this,'20:30')">20:30</button>
+        <button class="time-slot" id="slot-18:00" onclick="selectTime(this,'18:00')">18:00</button>
+        <button class="time-slot" id="slot-18:30" onclick="selectTime(this,'18:30')">18:30</button>
+        <button class="time-slot" id="slot-19:00" onclick="selectTime(this,'19:00')">19:00</button>
+        <button class="time-slot" id="slot-19:30" onclick="selectTime(this,'19:30')">19:30</button>
+        <button class="time-slot" id="slot-20:00" onclick="selectTime(this,'20:00')">20:00</button>
+        <button class="time-slot" id="slot-20:30" onclick="selectTime(this,'20:30')">20:30</button>
       </div>
       <div class="selected-slot-label" id="slotLabel"></div>
     </div>
@@ -188,18 +169,56 @@
     <p class="notice">I'll confirm within 24 hours. This is a request, not an instant booking.</p>
   </div>
 
-  <p class="profile-link">
-    View my full profile on <a href="https://www.superprof.co.uk/called-barrister-with-bpc-llm-distinction-and-harmsworth-scholarship-teaches-civil-litigation-criminal-law-and-bpc-london-online.html" target="_blank">Superprof</a>
-  </p>
+  <p class="profile-link">View my full profile on <a href="https://www.superprof.co.uk/called-barrister-with-bpc-llm-distinction-and-harmsworth-scholarship-teaches-civil-litigation-criminal-law-and-bpc-london-online.html" target="_blank">Superprof</a></p>
 </main>
 
 <script>
+  // ── Replace this with your Google Apps Script Web App URL after deployment ──
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby2CjDj0cFcKo5tze_fARJ-RLpEgiS-wWEZ995eIvXN9Y9KUPE3wSd6QCCjWRw76o7Biw/exec';
+
   const TODAY = new Date(); TODAY.setHours(0,0,0,0);
   const LIMIT = new Date(TODAY); LIMIT.setDate(LIMIT.getDate() + 28);
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   let viewYear = TODAY.getFullYear(), viewMonth = TODAY.getMonth();
   let selectedDate = null, selectedTime = '';
+  let bookedSlots = []; // [{date:'2026-07-02', time:'18:00'}, …]
+
+  // Load booked slots from Apps Script
+  async function loadBookedSlots() {
+    try {
+      const res = await fetch(APPS_SCRIPT_URL + '?action=slots');
+      if (res.ok) {
+        bookedSlots = await res.json();
+      }
+    } catch (e) {
+      // Silently fail — calendar still works, just won't show booked slots
+    } finally {
+      document.getElementById('calLoading').style.display = 'none';
+      renderCalendar();
+    }
+  }
+
+  function isDateBooked(date) {
+    const dateStr = formatDate(date);
+    // A date is fully booked if all 8 slots are taken
+    const allSlots = ['12:00','13:00','18:00','18:30','19:00','19:30','20:00','20:30'];
+    const takenOnDay = bookedSlots.filter(s => s.date === dateStr).map(s => s.time);
+    return allSlots.every(s => takenOnDay.includes(s));
+  }
+
+  function isSlotBooked(date, time) {
+    if (!date) return false;
+    const dateStr = formatDate(date);
+    return bookedSlots.some(s => s.date === dateStr && s.time === time);
+  }
+
+  function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2,'0');
+    const d = String(date.getDate()).padStart(2,'0');
+    return y + '-' + m + '-' + d;
+  }
 
   function renderCalendar() {
     document.getElementById('calMonthLabel').textContent = MONTHS[viewMonth] + ' ' + viewYear;
@@ -217,28 +236,47 @@
       const isBeyond = date > LIMIT;
       const isToday = date.getTime() === TODAY.getTime();
       const isSel = selectedDate && date.getTime() === selectedDate.getTime();
+      const fullyBooked = !isWeekend && !isPast && !isBeyond && isDateBooked(date);
       const el = document.createElement('div');
       el.textContent = d;
       if (isWeekend || isPast || isBeyond) {
         el.className = 'cal-day unavailable';
+      } else if (fullyBooked) {
+        el.className = 'cal-day booked';
+        el.title = 'Fully booked';
       } else {
         el.className = 'cal-day available' + (isToday ? ' today' : '') + (isSel ? ' selected' : '');
         el.onclick = () => pickDate(date);
       }
       grid.appendChild(el);
     }
+    // Update time slot availability when date changes
+    updateTimeSlots();
   }
 
-  function pickDate(date) {
-    selectedDate = date;
-    renderCalendar();
-    updateLabel();
+  function updateTimeSlots() {
+    const allTimes = ['12:00','13:00','18:00','18:30','19:00','19:30','20:00','20:30'];
+    allTimes.forEach(t => {
+      const btn = document.getElementById('slot-' + t);
+      if (!btn) return;
+      const booked = selectedDate && isSlotBooked(selectedDate, t);
+      if (booked) {
+        btn.className = 'time-slot booked';
+        btn.disabled = true;
+        if (selectedTime === t) { selectedTime = ''; updateLabel(); }
+      } else {
+        btn.className = 'time-slot' + (selectedTime === t ? ' selected' : '');
+        btn.disabled = false;
+      }
+    });
   }
 
+  function pickDate(date) { selectedDate = date; renderCalendar(); updateLabel(); }
   function prevMonth() { viewMonth--; if (viewMonth < 0) { viewMonth = 11; viewYear--; } renderCalendar(); }
   function nextMonth() { viewMonth++; if (viewMonth > 11) { viewMonth = 0; viewYear++; } renderCalendar(); }
 
   function selectTime(el, time) {
+    if (el.classList.contains('booked')) return;
     document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
     el.classList.add('selected');
     selectedTime = time;
@@ -274,18 +312,16 @@
     const dateStr = selectedDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
     try {
-      const res = await fetch('https://formspree.io/f/xojoeroj', {
-        method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: fname + ' ' + lname, email,
-          bpc_stage: stage, subjects,
-          preferred_date: dateStr, preferred_time: selectedTime,
-          notes: notes || 'None provided',
-          _subject: 'New tutoring enquiry – ' + fname + ' – ' + dateStr + ' at ' + selectedTime
-        })
+      const params = new URLSearchParams({
+        action: 'book',
+        name: fname + ' ' + lname,
+        email, bpc_stage: stage, subjects,
+        preferred_date: dateStr, preferred_time: selectedTime,
+        notes: notes || 'None provided'
       });
-      if (res.ok) {
+      const res = await fetch(APPS_SCRIPT_URL + '?' + params.toString());
+      const data = await res.json();
+      if (data.status === 'ok') {
         toast.textContent = 'Thanks, ' + fname + '. Your request for ' + dateStr + ' at ' + selectedTime + ' has been sent. I\'ll be in touch within 24 hours to confirm.';
         toast.className = 'toast success'; btn.textContent = 'Request sent';
       } else { throw new Error(); }
@@ -295,7 +331,8 @@
     }
   }
 
-  renderCalendar();
+  // Init
+  loadBookedSlots();
 </script>
 </body>
 </html>
